@@ -12,7 +12,7 @@ pico_sdk_init()
 include_directories(/Users/kouhei/pico/project/eigen)
 
 add_executable(pico_copter
-  pico_copter.cpp
+  main.cpp
   sensor.cpp
   ekf.cpp
   lsm9ds1_reg.c

@@ -2,7 +2,7 @@
 #define CONTROL_HPP
 
 #include <stdio.h>
-#include "pico_copter.hpp"
+#include "main.hpp"
 #include "pico/stdlib.h"
 #include "sensor.hpp"
 #include "hardware/pwm.h"
@@ -32,6 +32,7 @@ void log_output(void);
 //グローバル変数
 extern uint8_t LockMode;
 extern volatile uint8_t Logoutputflag;
+extern float FR_duty, FL_duty, RR_duty, RL_duty;
 
 class PID
 {

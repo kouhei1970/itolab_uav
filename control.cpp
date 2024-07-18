@@ -1,8 +1,6 @@
 //control.cpp
 //
 //pull request
-
-
 #include "control.hpp"
 
 //Sensor data
@@ -70,6 +68,7 @@ PID theta_pid;
 PID psi_pid;
 
 void loop_400Hz(void);
+void direct_control(void);
 void rate_control(void);
 void sensor_read(void);
 void angle_control(void);
@@ -93,8 +92,7 @@ void loop_400Hz(void)
   S_time=time_us_32();
   
   //割り込みフラグリセット
-  pwm_clear_irq(2);
-
+  pwm_clear_irq(3);
 
   if (Arm_flag==0)
   {
@@ -212,8 +210,10 @@ void loop_400Hz(void)
     }
    
     //Rate Control (400Hz)
-    rate_control();
-   
+    //rate_control();
+    //Direct control
+    direct_control();
+
     if(AngleControlCounter==4)
     {
       AngleControlCounter=0;
@@ -297,14 +297,6 @@ void control_init(void)
   phi_pid.set_parameter  ( 5.5, 9.5, 0.025, 0.018, 0.01);//6.0
   theta_pid.set_parameter( 5.5, 9.5, 0.025, 0.018, 0.01);//6.0
   psi_pid.set_parameter  ( 0.0, 10.0, 0.010, 0.03, 0.01);
-  //Rate control
-  //p_pid.set_parameter(3.3656, 0.1, 0.0112, 0.01, 0.0025);
-  //q_pid.set_parameter(3.8042, 0.1, 0.0111, 0.01, 0.0025);
-  //r_pid.set_parameter(9.4341, 0.11, 0.0056, 0.01, 0.0025);
-  //Angle control
-  //phi_pid.set_parameter  ( 9.0   , 0.07, 0.0352,  0.01, 0.01);
-  //theta_pid.set_parameter( 8.5583, 0.1 , 0.0552,  0.01, 0.01);
-  //psi_pid.set_parameter  ( 9.0256, 0.11, 0.0034,  0.01, 0.01);
 }
 
 uint8_t lock_com(void)
@@ -326,9 +318,7 @@ uint8_t lock_com(void)
     chatta=0;
     state=0;
   }
-
   return state;
-
 }
 
 uint8_t logdata_out_com(void)
@@ -361,6 +351,92 @@ void motor_stop(void)
   set_duty_fl(0.0);
   set_duty_rr(0.0);
   set_duty_rl(0.0);
+}
+
+void direct_control(void)
+{
+  float p_rate, q_rate, r_rate;
+  float p_ref, q_ref, r_ref;
+  float p_err, q_err, r_err;
+
+  //Read Sensor Value
+  sensor_read();
+
+  //Control angle velocity
+  p_rate = Wp - Pbias;
+  q_rate = Wq - Qbias;
+  r_rate = Wr - Rbias;
+
+  //Get Stick Command 
+  T_ref = (float)(Chdata[2] - CH3MIN)/(CH3MAX-CH3MIN);
+  P_com = (float)(Chdata[3] - (CH4MAX+CH4MIN)*0.5)*2/(CH4MAX-CH4MIN);
+  Q_com = (float)(Chdata[1] - (CH2MAX+CH2MIN)*0.5)*2/(CH2MAX-CH2MIN);
+  R_com = (float)(Chdata[0] - (CH1MAX+CH1MIN)*0.5)*2/(CH1MAX-CH1MIN);
+
+  //Motor Control
+  // 1250/11.1=112.6
+  // 1/11.1=0.0901
+  FR_duty = R_com;//Rudder Yaw
+  FL_duty = Q_com;//Elevator Pitch
+  RR_duty = P_com;//Aileron Roll
+  RL_duty = T_ref;//Thrust
+  
+  const float minimum_duty =-0.95;
+  const float maximum_duty = 0.95;
+  //minimum_duty = Disable_duty;
+
+  if (FR_duty < minimum_duty) FR_duty = minimum_duty;
+  if (FR_duty > maximum_duty) FR_duty = maximum_duty;
+
+  if (FL_duty < minimum_duty) FL_duty = minimum_duty;
+  if (FL_duty > maximum_duty) FL_duty = maximum_duty;
+
+  if (RR_duty < minimum_duty) RR_duty = minimum_duty;
+  if (RR_duty > maximum_duty) RR_duty = maximum_duty;
+
+  if (RL_duty < 0.0) RL_duty = 0.0;
+  if (RL_duty > maximum_duty) RL_duty = maximum_duty;
+
+  //Duty set
+  if(0)
+  {
+    motor_stop();
+    p_pid.reset();
+    q_pid.reset();
+    r_pid.reset();
+    Pref=0.0;
+    Qref=0.0;
+    Rref=0.0;
+    Aileron_center  = Chdata[3];
+    Elevator_center = Chdata[1];
+    Rudder_center   = Chdata[0];
+    Phi_bias   = Phi;
+    Theta_bias = Theta;
+    Psi_bias   = Psi;
+  }
+  else
+  {
+    if (OverG_flag==0){
+      set_duty_fr(FR_duty);
+      set_duty_fl(FL_duty);
+      set_duty_rr(RR_duty);
+      set_duty_rl(RL_duty);
+    }
+    else motor_stop();
+    //printf("%12.5f %12.5f %12.5f %12.5f\n",FR_duty, FL_duty, RR_duty, RL_duty);
+  }
+ 
+  //printf("\n");
+
+  //printf("%12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f\n", 
+  //    Elapsed_time, fr_duty, fl_duty, rr_duty, rl_duty, p_rate, q_rate, r_rate);
+  //printf("%12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f\n", 
+  //    Elapsed_time, p_com, q_com, r_com, p_ref, q_ref, r_ref);
+  //printf("%12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f\n", 
+  //    Elapsed_time, Phi, Theta, Psi, Phi_bias, Theta_bias, Psi_bias);
+  //Elapsed_time = Elapsed_time + 0.0025;
+  //Logging
+  //logging();
 }
 
 void rate_control(void)
