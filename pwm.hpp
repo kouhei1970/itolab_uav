@@ -21,9 +21,14 @@ extern uint8_t ESC_calib;
 
 //関数の宣言
 void pwm_init();
-void set_duty_fr(float duty);
-void set_duty_fl(float duty);
-void set_duty_rr(float duty);
-void set_duty_rl(float duty);
-
+void set_duty_rudder(float duty);
+void set_duty_elevator(float duty);
+void set_duty_aileron(float duty);
+void set_duty_throttle(float duty);
+/*
+    set_duty_fr(Rudder_duty);
+    set_duty_fl(Elevator_duty);
+    set_duty_rr(Aileron_duty);
+    set_duty_rl(Throttle_duty);
+*/
 #endif

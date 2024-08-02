@@ -49,7 +49,7 @@ int main(void)
   while(1)
   {
     //printf("Arm_flag:%d LockMode:%d\n",Arm_flag, LockMode);
-    printf("%d %d %d %d \n",Chdata[0],Chdata[1],Chdata[2],Chdata[3]);
+    //printf("%d %d %d %d %d\n",Chdata[0],Chdata[1],Chdata[2],Chdata[3],Chdata[4]);
     tight_loop_contents();
     while (Logoutputflag==1){
       log_output();

@@ -11,6 +11,11 @@
 #include "ekf.hpp"
 #include <math.h>
 
+#define AILERON_CH Chdata[0]
+#define ELEVATOR_CH Chdata[1]
+#define THROTTLE_CH Chdata[2]
+#define RUDDER_CH Chdata[3]
+
 using Eigen::MatrixXd;
 using Eigen::MatrixXf;
 using Eigen::Matrix;

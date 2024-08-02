@@ -18,7 +18,7 @@ uint16_t BiasCounter=0;
 uint16_t LedBlinkCounter=0;
 
 //Control 
-float FR_duty, FL_duty, RR_duty, RL_duty;
+float Rudder_duty, Elevator_duty, Aileron_duty, Throttle_duty;
 float P_com, Q_com, R_com;
 float T_ref;
 float Pbias=0.0,Qbias=0.0,Rbias=0.0;
@@ -261,12 +261,15 @@ void loop_400Hz(void)
       return;
     }
 
+    #if 0
     if(logdata_out_com()==1)
     {
       Arm_flag=4;
       return;
     }
+    #endif
   }
+  #if 0
   else if(Arm_flag==4)
   {
     motor_stop();
@@ -282,6 +285,7 @@ void loop_400Hz(void)
       led=!led;
     }
   }
+  #endif
   E_time=time_us_32();
   D_time=E_time-S_time;
 }
@@ -302,10 +306,10 @@ void control_init(void)
 uint8_t lock_com(void)
 {
   static uint8_t chatta=0,state=0;
-  if( Chdata[2]<CH3MIN+80 
-   && Chdata[0]>CH1MAX-80
-   && Chdata[3]<CH4MIN+80 
-   && Chdata[1]>CH2MAX-80)
+  if( (AILERON_CH  > (CH_MAX - 100))
+   && (ELEVATOR_CH > (CH_MAX - 100))
+   && (THROTTLE_CH < (CH_MIN + 100)) 
+   && (RUDDER_CH   < (CH_MIN + 100)))
   { 
     chatta++;
     if(chatta>50){
@@ -318,6 +322,9 @@ uint8_t lock_com(void)
     chatta=0;
     state=0;
   }
+  //printf("Arm_flag:%d LockMode:%d chatta:%d CH1:%d CH2:%d CH3:%d CH4:%d CH5:%d\n",
+  //Arm_flag, LockMode,chatta,
+  //AILERON_CH, ELEVATOR_CH, THROTTLE_CH, RUDDER_CH, Chdata[4]);
   return state;
 }
 
@@ -347,10 +354,10 @@ uint8_t logdata_out_com(void)
 
 void motor_stop(void)
 {
-  set_duty_fr(0.0);
-  set_duty_fl(0.0);
-  set_duty_rr(0.0);
-  set_duty_rl(0.0);
+  set_duty_rudder(0.0);
+  set_duty_elevator(0.0);
+  set_duty_aileron(0.0);
+  set_duty_throttle(0.0);
 }
 
 void direct_control(void)
@@ -368,34 +375,34 @@ void direct_control(void)
   r_rate = Wr - Rbias;
 
   //Get Stick Command 
-  T_ref = (float)(Chdata[2] - CH3MIN)/(CH3MAX-CH3MIN);
-  P_com = (float)(Chdata[3] - (CH4MAX+CH4MIN)*0.5)*2/(CH4MAX-CH4MIN);
-  Q_com = (float)(Chdata[1] - (CH2MAX+CH2MIN)*0.5)*2/(CH2MAX-CH2MIN);
-  R_com = (float)(Chdata[0] - (CH1MAX+CH1MIN)*0.5)*2/(CH1MAX-CH1MIN);
+  T_ref = (float)(THROTTLE_CH - CH3MIN)/(CH_MAX-CH_MIN);
+  P_com = (float)(AILERON_CH - (CH1MAX+CH1MIN)*0.5)*2/(CH1MAX-CH1MIN);
+  Q_com = (float)(ELEVATOR_CH - (CH2MAX+CH2MIN)*0.5)*2/(CH2MAX-CH2MIN);
+  R_com = (float)(RUDDER_CH - (CH4MAX+CH4MIN)*0.5)*2/(CH4MAX-CH4MIN);
 
   //Motor Control
   // 1250/11.1=112.6
   // 1/11.1=0.0901
-  FR_duty = R_com;//Rudder Yaw
-  FL_duty = Q_com;//Elevator Pitch
-  RR_duty = P_com;//Aileron Roll
-  RL_duty = T_ref;//Thrust
+  Rudder_duty = R_com;//Rudder Yaw
+  Elevator_duty = Q_com;//Elevator Pitch
+  Aileron_duty = P_com;//Aileron Roll
+  Throttle_duty = T_ref;//Throttle
   
   const float minimum_duty =-0.95;
   const float maximum_duty = 0.95;
   //minimum_duty = Disable_duty;
 
-  if (FR_duty < minimum_duty) FR_duty = minimum_duty;
-  if (FR_duty > maximum_duty) FR_duty = maximum_duty;
+  if (Rudder_duty < minimum_duty) Rudder_duty = minimum_duty;
+  if (Rudder_duty > maximum_duty) Rudder_duty = maximum_duty;
 
-  if (FL_duty < minimum_duty) FL_duty = minimum_duty;
-  if (FL_duty > maximum_duty) FL_duty = maximum_duty;
+  if (Elevator_duty < minimum_duty) Elevator_duty = minimum_duty;
+  if (Elevator_duty > maximum_duty) Elevator_duty = maximum_duty;
 
-  if (RR_duty < minimum_duty) RR_duty = minimum_duty;
-  if (RR_duty > maximum_duty) RR_duty = maximum_duty;
+  if (Aileron_duty < minimum_duty) Aileron_duty = minimum_duty;
+  if (Aileron_duty > maximum_duty) Aileron_duty = maximum_duty;
 
-  if (RL_duty < 0.0) RL_duty = 0.0;
-  if (RL_duty > maximum_duty) RL_duty = maximum_duty;
+  if (Throttle_duty < 0.0) Throttle_duty = 0.0;
+  if (Throttle_duty > maximum_duty) Throttle_duty = maximum_duty;
 
   //Duty set
   if(0)
@@ -417,13 +424,13 @@ void direct_control(void)
   else
   {
     if (OverG_flag==0){
-      set_duty_fr(FR_duty);
-      set_duty_fl(FL_duty);
-      set_duty_rr(RR_duty);
-      set_duty_rl(RL_duty);
+      set_duty_rudder(Rudder_duty);
+      set_duty_elevator(Elevator_duty);
+      set_duty_aileron(Aileron_duty);
+      set_duty_throttle(Throttle_duty);
     }
     else motor_stop();
-    //printf("%12.5f %12.5f %12.5f %12.5f\n",FR_duty, FL_duty, RR_duty, RL_duty);
+    //printf("%12.5f %12.5f %12.5f %12.5f\n",Rudder_duty, Elevator_duty, Aileron_duty, Throttle_duty);
   }
  
   //printf("\n");
@@ -478,30 +485,30 @@ void rate_control(void)
   // 1250/11.1=112.6
   // 1/11.1=0.0901
   
-  FR_duty = (T_ref +(-P_com +Q_com -R_com)*0.25)*0.0901;
-  FL_duty = (T_ref +( P_com +Q_com +R_com)*0.25)*0.0901;
-  RR_duty = (T_ref +(-P_com -Q_com +R_com)*0.25)*0.0901;
-  RL_duty = (T_ref +( P_com -Q_com -R_com)*0.25)*0.0901;
-  //FR_duty = (T_ref)*0.0901;
-  //FL_duty = (T_ref)*0.0901;
-  //RR_duty = (T_ref)*0.0901;
-  //RL_duty = (T_ref)*0.0901;
+  Rudder_duty = (T_ref +(-P_com +Q_com -R_com)*0.25)*0.0901;
+  Elevator_duty = (T_ref +( P_com +Q_com +R_com)*0.25)*0.0901;
+  Aileron_duty = (T_ref +(-P_com -Q_com +R_com)*0.25)*0.0901;
+  Throttle_duty = (T_ref +( P_com -Q_com -R_com)*0.25)*0.0901;
+  //Rudder_duty = (T_ref)*0.0901;
+  //Elevator_duty = (T_ref)*0.0901;
+  //Aileron_duty = (T_ref)*0.0901;
+  //Throttle_duty = (T_ref)*0.0901;
   
   float minimum_duty=0.1;
   const float maximum_duty=0.95;
   minimum_duty = Disable_duty;
 
-  if (FR_duty < minimum_duty) FR_duty = minimum_duty;
-  if (FR_duty > maximum_duty) FR_duty = maximum_duty;
+  if (Rudder_duty < minimum_duty) Rudder_duty = minimum_duty;
+  if (Rudder_duty > maximum_duty) Rudder_duty = maximum_duty;
 
-  if (FL_duty < minimum_duty) FL_duty = minimum_duty;
-  if (FL_duty > maximum_duty) FL_duty = maximum_duty;
+  if (Elevator_duty < minimum_duty) Elevator_duty = minimum_duty;
+  if (Elevator_duty > maximum_duty) Elevator_duty = maximum_duty;
 
-  if (RR_duty < minimum_duty) RR_duty = minimum_duty;
-  if (RR_duty > maximum_duty) RR_duty = maximum_duty;
+  if (Aileron_duty < minimum_duty) Aileron_duty = minimum_duty;
+  if (Aileron_duty > maximum_duty) Aileron_duty = maximum_duty;
 
-  if (RL_duty < minimum_duty) RL_duty = minimum_duty;
-  if (RL_duty > maximum_duty) RL_duty = maximum_duty;
+  if (Throttle_duty < minimum_duty) Throttle_duty = minimum_duty;
+  if (Throttle_duty > maximum_duty) Throttle_duty = maximum_duty;
 
   //Duty set
   if(T_ref/BATTERY_VOLTAGE < Disable_duty)
@@ -523,15 +530,22 @@ void rate_control(void)
   else
   {
     if (OverG_flag==0){
-      set_duty_fr(FR_duty);
-      set_duty_fl(FL_duty);
-      set_duty_rr(RR_duty);
-      set_duty_rl(RL_duty);
+      set_duty_rudder(Rudder_duty);
+      set_duty_elevator(Elevator_duty);
+      set_duty_aileron(Aileron_duty);
+      set_duty_throttle(Throttle_duty);
     }
     else motor_stop();
-    //printf("%12.5f %12.5f %12.5f %12.5f\n",FR_duty, FL_duty, RR_duty, RL_duty);
+    //printf("%12.5f %12.5f %12.5f %12.5f\n",Rudder_duty, Elevator_duty, Aileron_duty, Throttle_duty);
   }
- 
+/*
+    set_duty_rudder(Rudder_duty);
+    set_duty_elevator(Elevator_duty);
+    set_duty_aileron(Aileron_duty);
+    set_duty_throttle(Throttle_duty);
+*/ 
+
+
   //printf("\n");
 
   //printf("%12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f\n", 
