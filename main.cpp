@@ -1,5 +1,6 @@
 // comment
 #include "main.hpp"
+#include "control.hpp"
 
 //グローバル変数
 uint8_t Arm_flag=0;
@@ -46,8 +47,17 @@ int main(void)
 
   Arm_flag=1;
   
+  float maxacc = 0.0;
+  float maxrate = 0.0;
   while(1)
   {
+    #if 0
+    if (Acc_norm_raw > maxacc) maxacc = Acc_norm_raw;
+    if (Rate_norm_raw > maxrate) maxrate = Rate_norm_raw;
+
+    if (Arm_flag ==FLIGHT_MODE || Arm_flag ==PARKING_MODE)
+      printf("%f %d %d %d %f %f\n\r", Flight_time, Start_G_flag, Last_Start_G_flag, OverG_flag, maxacc, maxrate);
+    #endif
     //printf("Arm_flag:%d LockMode:%d\n",Arm_flag, LockMode);
     //printf("%d %d %d %d %d\n",Chdata[0],Chdata[1],Chdata[2],Chdata[3],Chdata[4]);
     tight_loop_contents();

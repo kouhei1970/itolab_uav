@@ -16,6 +16,14 @@
 #define THROTTLE_CH Chdata[2]
 #define RUDDER_CH Chdata[3]
 
+#define INIT_MODE (0)
+#define AVERAGE_MODE (1)
+#define FLIGHT_MODE (2)
+#define PARKING_MODE (3)
+#define LOG_MODE (4)
+#define LANDING_MODE (5)
+#define PARACHUTE_DEPLOYMENT_MODE (6)
+
 using Eigen::MatrixXd;
 using Eigen::MatrixXf;
 using Eigen::Matrix;
@@ -38,6 +46,9 @@ void log_output(void);
 extern uint8_t LockMode;
 extern volatile uint8_t Logoutputflag;
 extern float FR_duty, FL_duty, RR_duty, RL_duty;
+extern float Flight_time;
+extern uint8_t Start_G_flag, Last_Start_G_flag, OverG_flag;
+extern float Acc_norm, Acc_norm_raw, Rate_norm_raw;
 
 class PID
 {
@@ -80,6 +91,5 @@ class Filter
     void reset(void);
     float update(float u);
 };
-
 
 #endif

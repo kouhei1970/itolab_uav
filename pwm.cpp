@@ -125,3 +125,13 @@ void set_duty_throttle(float duty)
     pwm_set_chan_level(Slice_num_rear, PWM_CHAN_A, time2warp(usec));
     //printf("%4.2f\n", duty);
 }
+
+void set_duty_servo(float duty)
+{
+    uint16_t usec;
+    if (duty >  0.95)duty = 0.95;  
+    if (duty <  0.0)duty =0.0;
+    usec = (uint16_t)(duty*1000.0) + 1000;
+    pwm_set_chan_level(Slice_num_servo, PWM_CHAN_A, time2warp(usec));
+    //printf("%4.2f\n", duty);
+}

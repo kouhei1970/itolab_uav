@@ -25,6 +25,7 @@ void set_duty_rudder(float duty);
 void set_duty_elevator(float duty);
 void set_duty_aileron(float duty);
 void set_duty_throttle(float duty);
+void set_duty_servo(float duty);
 /*
     set_duty_fr(Rudder_duty);
     set_duty_fl(Elevator_duty);
