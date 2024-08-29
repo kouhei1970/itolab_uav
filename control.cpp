@@ -85,8 +85,8 @@ uint8_t lock_com(void);
 uint8_t logdata_out_com(void);
 void printPQR(void);
 
-#define AVERAGE 2000
-#define KALMANWAIT 6000
+#define AVERAGE 800
+#define KALMANWAIT 3000
 
 // Main loop
 // This function is called from PWM Intrupt on 400Hz.
@@ -216,7 +216,7 @@ void loop_400Hz(void)
       {
         LedBlinkCounter++;
       }
-      else if (Start_G_flag == 1 && LedBlinkCounter < 100)
+      else if (Start_G_flag == 1 && LedBlinkCounter < 20)
       {
         LedBlinkCounter++;
       }
@@ -819,6 +819,7 @@ void gyroCalibration(void)
 }
 
 float Acc_norm_raw;
+float Acc_norm_x;
 float Rate_norm_raw;
 
 void sensor_read(void)
@@ -838,17 +839,19 @@ void sensor_read(void)
 
 
   Acc_norm_raw = sqrt(Ax * Ax + Ay * Ay + (Az) * (Az));
+  Acc_norm_x = sqrt(Ax*Ax);
   Acc_norm = acc_filter.update(Acc_norm_raw);
   Rate_norm_raw = sqrt(Wp * Wp + Wq * Wq + Wr * Wr);
 
   //動的加速度が2.5Gを超えたら射出されたとみてフラグを立てる  
-  if (Acc_norm_raw > 25.0)
+  if (Acc_norm_x > 130.0) {
     Start_G_flag = 1;
-
-  if (Acc_norm_raw > 60.0)
+    //OverG_flag++;
+  }
+  if (Acc_norm >200.0) {
     OverG_flag = 1;
-  //if (Rate_norm_raw > 6.0)
-  //  OverG_flag = 1;
+    Start_G_flag = 0;
+  }
 
   /*地磁気校正データ
   回転行列

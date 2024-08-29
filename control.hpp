@@ -48,7 +48,7 @@ extern volatile uint8_t Logoutputflag;
 extern float FR_duty, FL_duty, RR_duty, RL_duty;
 extern float Flight_time;
 extern uint8_t Start_G_flag, Last_Start_G_flag, OverG_flag;
-extern float Acc_norm, Acc_norm_raw, Rate_norm_raw;
+extern float Acc_norm, Acc_norm_raw, Acc_norm_x,Rate_norm_raw;
 
 class PID
 {
