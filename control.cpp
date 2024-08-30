@@ -119,7 +119,7 @@ void loop_400Hz(void)
   else if (Arm_flag == AVERAGE_MODE)
   {
     motor_stop();
-    set_duty_servo(0.01f);
+    set_duty_servo(P_LOCK);
     // Gyro Bias Estimate
     if (BiasCounter < AVERAGE)
     {
@@ -334,7 +334,7 @@ void loop_400Hz(void)
     else if (Arm_flag = PARACHUTE_DEPLOYMENT_MODE)
     {
       motor_stop();
-      set_duty_servo(0.95f);
+      set_duty_servo(P_UNLOCK);
       LockMode = 0;
       Arm_flag = PARKING_MODE;
     }
@@ -403,6 +403,8 @@ uint8_t logdata_out_com(void)
   return state;
 }
 
+
+
 void motor_stop(void)
 {
   set_duty_rudder(0.0);
@@ -425,9 +427,9 @@ void direct_control(void)
 
   // Get Stick Command
   T_ref = (float)(THROTTLE_CH - CH3MIN) / (CH_MAX - CH_MIN);
-  P_com = (float)(AILERON_CH - (CH1MAX + CH1MIN) * 0.5) * 2 / (CH1MAX - CH1MIN);
-  Q_com = (float)(ELEVATOR_CH - (CH2MAX + CH2MIN) * 0.5) * 2 / (CH2MAX - CH2MIN);
-  R_com = (float)(RUDDER_CH - (CH4MAX + CH4MIN) * 0.5) * 2 / (CH4MAX - CH4MIN);
+  Phi_ref = (float)(AILERON_CH - (CH1MAX + CH1MIN) * 0.5) * 2 / (CH1MAX - CH1MIN);
+  Theta_ref = (float)(ELEVATOR_CH - (CH2MAX + CH2MIN) * 0.5) * 2 / (CH2MAX - CH2MIN);
+  Psi_ref = (float)(RUDDER_CH - (CH4MAX + CH4MIN) * 0.5) * 2 / (CH4MAX - CH4MIN);
 
   // Motor Control
   //  1250/11.1=112.6
@@ -486,7 +488,7 @@ void direct_control(void)
       set_duty_elevator(Elevator_duty);
       set_duty_aileron(Aileron_duty);
       set_duty_throttle(Throttle_duty);
-      set_duty_servo(0.01f);
+      set_duty_servo(P_LOCK);
     }
     else
       motor_stop();
@@ -653,9 +655,9 @@ void angle_control(void)
     Psi = atan2(e12, e11);
 
     // Get angle ref
-    Phi_ref = Phi_trim + 0.3 * M_PI * (float)(Chdata[3] - (CH4MAX + CH4MIN) * 0.5) * 2 / (CH4MAX - CH4MIN);
-    Theta_ref = Theta_trim + 0.3 * M_PI * (float)(Chdata[1] - (CH2MAX + CH2MIN) * 0.5) * 2 / (CH2MAX - CH2MIN);
-    Psi_ref = Psi_trim + 0.8 * M_PI * (float)(Chdata[0] - (CH1MAX + CH1MIN) * 0.5) * 2 / (CH1MAX - CH1MIN);
+    //Phi_ref = Phi_trim + 0.3 * M_PI * (float)(Chdata[3] - (CH4MAX + CH4MIN) * 0.5) * 2 / (CH4MAX - CH4MIN);
+    //Theta_ref = Theta_trim + 0.3 * M_PI * (float)(Chdata[1] - (CH2MAX + CH2MIN) * 0.5) * 2 / (CH2MAX - CH2MIN);
+    //Psi_ref = Psi_trim + 0.8 * M_PI * (float)(Chdata[0] - (CH1MAX + CH1MIN) * 0.5) * 2 / (CH1MAX - CH1MIN);
 
     // Error
     phi_err = Phi_ref - (Phi - Phi_bias);
@@ -707,48 +709,48 @@ void logging(void)
     }
     if (LogdataCounter + DATANUM < LOGDATANUM)
     {
-      Logdata[LogdataCounter++] = Xe(0, 0); // 1
-      Logdata[LogdataCounter++] = Xe(1, 0); // 2
-      Logdata[LogdataCounter++] = Xe(2, 0); // 3
-      Logdata[LogdataCounter++] = Xe(3, 0); // 4
-      Logdata[LogdataCounter++] = Xe(4, 0); // 5
-      Logdata[LogdataCounter++] = Xe(5, 0); // 6
-      Logdata[LogdataCounter++] = Xe(6, 0); // 7
-      Logdata[LogdataCounter++] = Wp;       //-Pbias;              //8
-      Logdata[LogdataCounter++] = Wq;       //-Qbias;              //9
-      Logdata[LogdataCounter++] = Wr;       //-Rbias;              //10
+      Logdata[LogdataCounter++] = Xe(0, 0); // 2
+      Logdata[LogdataCounter++] = Xe(1, 0); // 3
+      Logdata[LogdataCounter++] = Xe(2, 0); // 4
+      Logdata[LogdataCounter++] = Xe(3, 0); // 5
+      Logdata[LogdataCounter++] = Xe(4, 0); // 6
+      Logdata[LogdataCounter++] = Xe(5, 0); // 7
+      Logdata[LogdataCounter++] = Xe(6, 0); // 8
+      Logdata[LogdataCounter++] = Wp;       //-Pbias;              //9
+      Logdata[LogdataCounter++] = Wq;       //-Qbias;              //10
+      Logdata[LogdataCounter++] = Wr;       //-Rbias;              //11
 
-      Logdata[LogdataCounter++] = Ax;             // 11
-      Logdata[LogdataCounter++] = Ay;             // 12
-      Logdata[LogdataCounter++] = Az;             // 13
-      Logdata[LogdataCounter++] = Mx;             // 14
-      Logdata[LogdataCounter++] = My;             // 15
-      Logdata[LogdataCounter++] = Mz;             // 16
-      Logdata[LogdataCounter++] = Pref;           // 17
-      Logdata[LogdataCounter++] = Qref;           // 18
-      Logdata[LogdataCounter++] = Rref;           // 19
-      Logdata[LogdataCounter++] = Phi - Phi_bias; // 20
+      Logdata[LogdataCounter++] = Ax;             // 12
+      Logdata[LogdataCounter++] = Ay;             // 13
+      Logdata[LogdataCounter++] = Az;             // 14
+      Logdata[LogdataCounter++] = Mx;             // 15
+      Logdata[LogdataCounter++] = My;             // 16
+      Logdata[LogdataCounter++] = Mz;             // 17
+      Logdata[LogdataCounter++] = Pref;           // 18
+      Logdata[LogdataCounter++] = Qref;           // 19
+      Logdata[LogdataCounter++] = Rref;           // 20
+      Logdata[LogdataCounter++] = Phi; // 21
 
-      Logdata[LogdataCounter++] = Theta - Theta_bias; // 21
-      Logdata[LogdataCounter++] = Psi - Psi_bias;     // 22
-      Logdata[LogdataCounter++] = Phi_ref;            // 23
-      Logdata[LogdataCounter++] = Theta_ref;          // 24
-      Logdata[LogdataCounter++] = Psi_ref;            // 25
-      Logdata[LogdataCounter++] = P_com;              // 26
-      Logdata[LogdataCounter++] = Q_com;              // 27
-      Logdata[LogdataCounter++] = R_com;              // 28
-      Logdata[LogdataCounter++] = p_pid.m_integral;   // m_filter_output;    //29
-      Logdata[LogdataCounter++] = q_pid.m_integral;   // m_filter_output;    //30
+      Logdata[LogdataCounter++] = Theta; // 22
+      Logdata[LogdataCounter++] = Psi;     // 23
+      Logdata[LogdataCounter++] = Phi_ref;            // 24
+      Logdata[LogdataCounter++] = Theta_ref;          // 25
+      Logdata[LogdataCounter++] = Psi_ref;            // 26
+      Logdata[LogdataCounter++] = P_com;              // 27
+      Logdata[LogdataCounter++] = Q_com;              // 28
+      Logdata[LogdataCounter++] = R_com;              // 29
+      Logdata[LogdataCounter++] = p_pid.m_integral;   // m_filter_output;    //30
+      Logdata[LogdataCounter++] = q_pid.m_integral;   // m_filter_output;    //31
 
-      Logdata[LogdataCounter++] = r_pid.m_integral;     // m_filter_output;    //31
-      Logdata[LogdataCounter++] = phi_pid.m_integral;   // m_filter_output;  //32
-      Logdata[LogdataCounter++] = theta_pid.m_integral; // m_filter_output;//33
-      Logdata[LogdataCounter++] = Pbias;                // 34
-      Logdata[LogdataCounter++] = Qbias;                // 35
+      Logdata[LogdataCounter++] = r_pid.m_integral;     // m_filter_output;    //32
+      Logdata[LogdataCounter++] = phi_pid.m_integral;   // m_filter_output;  //33
+      Logdata[LogdataCounter++] = theta_pid.m_integral; // m_filter_output;//34
+      Logdata[LogdataCounter++] = Pbias;                // 35
+      Logdata[LogdataCounter++] = Qbias;                // 36
 
-      Logdata[LogdataCounter++] = Rbias;    // 36
+      Logdata[LogdataCounter++] = Rbias;    // 37
       Logdata[LogdataCounter++] = T_ref;    // 37
-      Logdata[LogdataCounter++] = Acc_norm; // 38
+      Logdata[LogdataCounter++] = Acc_norm; // 39
     }
     else
       Logflag = 2;

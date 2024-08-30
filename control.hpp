@@ -24,6 +24,9 @@
 #define LANDING_MODE (5)
 #define PARACHUTE_DEPLOYMENT_MODE (6)
 
+#define P_UNLOCK (0.01f)
+#define P_LOCK (0.95f)
+
 using Eigen::MatrixXd;
 using Eigen::MatrixXf;
 using Eigen::Matrix;
