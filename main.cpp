@@ -52,7 +52,7 @@ int main(void)
   float maxrate = 0.0;
   while(1) 
   {
-    #if 0z
+    #if 0
     if (Arm_flag != mode) {
       maxacc = 0.0;
       maxrate = 0.0;

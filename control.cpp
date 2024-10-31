@@ -434,9 +434,9 @@ void direct_control(void)
   // Motor Control
   //  1250/11.1=112.6
   //  1/11.1=0.0901
-  Rudder_duty = R_com;   // Rudder Yaw
-  Elevator_duty = Q_com; // Elevator Pitch
-  Aileron_duty = P_com;  // Aileron Roll
+  Rudder_duty   = Psi_ref;//R_com;   // Rudder Yaw
+  Elevator_duty = Theta_ref; // Elevator Pitch
+  Aileron_duty  = Phi_ref;  // Aileron Roll
   Throttle_duty = T_ref; // Throttle
 
   const float minimum_duty = -0.95;
@@ -492,7 +492,7 @@ void direct_control(void)
     }
     else
       motor_stop();
-    // printf("%12.5f %12.5f %12.5f %12.5f\n",Rudder_duty, Elevator_duty, Aileron_duty, Throttle_duty);
+      //printf("%12.5f %12.5f %12.5f %12.5f\n",Rudder_duty, Elevator_duty, Aileron_duty, Throttle_duty);
   }
 
   // printf("\n");
@@ -503,7 +503,7 @@ void direct_control(void)
   //     Elapsed_time, p_com, q_com, r_com, p_ref, q_ref, r_ref);
   // printf("%12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f\n",
   //     Elapsed_time, Phi, Theta, Psi, Phi_bias, Theta_bias, Psi_bias);
-  // Elapsed_time = Elapsed_time + 0.0025;
+  Elapsed_time = Elapsed_time + 0.0025;
   // Logging
   // logging();
 }
@@ -641,6 +641,9 @@ void angle_control(void)
     sem_reset(&sem, 0);
     S_time2 = time_us_32();
     kalman_filter();
+    E_time2 = time_us_32();
+    //printf("%12.5f %12.5f[ms]\n", Elapsed_time, (E_time2-S_time2)*1e-3 );//, fr_duty, fl_duty, rr_duty, rl_duty, p_rate, q_rate, r_rate);
+
     q0 = Xe(0, 0);
     q1 = Xe(1, 0);
     q2 = Xe(2, 0);
@@ -718,8 +721,8 @@ void logging(void)
       Logdata[LogdataCounter++] = Xe(6, 0); // 8
       Logdata[LogdataCounter++] = Wp;       //-Pbias;              //9
       Logdata[LogdataCounter++] = Wq;       //-Qbias;              //10
+      
       Logdata[LogdataCounter++] = Wr;       //-Rbias;              //11
-
       Logdata[LogdataCounter++] = Ax;             // 12
       Logdata[LogdataCounter++] = Ay;             // 13
       Logdata[LogdataCounter++] = Az;             // 14
@@ -729,10 +732,10 @@ void logging(void)
       Logdata[LogdataCounter++] = Pref;           // 18
       Logdata[LogdataCounter++] = Qref;           // 19
       Logdata[LogdataCounter++] = Rref;           // 20
-      Logdata[LogdataCounter++] = Phi; // 21
 
-      Logdata[LogdataCounter++] = Theta; // 22
-      Logdata[LogdataCounter++] = Psi;     // 23
+      Logdata[LogdataCounter++] = Phi; // 21 //2024/10/04修正
+      Logdata[LogdataCounter++] = Theta; // 22　/2024/10/04修正
+      Logdata[LogdataCounter++] = Psi;     // 23　/2024/10/04修正
       Logdata[LogdataCounter++] = Phi_ref;            // 24
       Logdata[LogdataCounter++] = Theta_ref;          // 25
       Logdata[LogdataCounter++] = Psi_ref;            // 26
@@ -740,14 +743,13 @@ void logging(void)
       Logdata[LogdataCounter++] = Q_com;              // 28
       Logdata[LogdataCounter++] = R_com;              // 29
       Logdata[LogdataCounter++] = p_pid.m_integral;   // m_filter_output;    //30
-      Logdata[LogdataCounter++] = q_pid.m_integral;   // m_filter_output;    //31
 
+      Logdata[LogdataCounter++] = q_pid.m_integral;   // m_filter_output;    //31
       Logdata[LogdataCounter++] = r_pid.m_integral;     // m_filter_output;    //32
       Logdata[LogdataCounter++] = phi_pid.m_integral;   // m_filter_output;  //33
       Logdata[LogdataCounter++] = theta_pid.m_integral; // m_filter_output;//34
       Logdata[LogdataCounter++] = Pbias;                // 35
       Logdata[LogdataCounter++] = Qbias;                // 36
-
       Logdata[LogdataCounter++] = Rbias;    // 37
       Logdata[LogdataCounter++] = T_ref;    // 37
       Logdata[LogdataCounter++] = Acc_norm; // 39

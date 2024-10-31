@@ -23,8 +23,6 @@ void pwm_init()
     gpio_set_function(15,GPIO_FUNC_PWM);//
     gpio_set_function(6, GPIO_FUNC_PWM);//Servo PWM
 
-
-
     // Find out which PWM slice is connected to GPIO 0 (it's slice 0)
     // Set period T
     // T=(wrap+1)*clkdiv/sysclock
@@ -52,6 +50,7 @@ void pwm_init()
       pwm_set_chan_level(Slice_num_rear,  PWM_CHAN_A, time2warp(2000));//throttle
       pwm_set_chan_level(Slice_num_front, PWM_CHAN_B, time2warp(1450));//aileron
       pwm_set_chan_level(Slice_num_rear,  PWM_CHAN_B, time2warp(1450));//rudder
+      set_duty_servo(P_LOCK);
     } 
     else
     {
@@ -59,6 +58,8 @@ void pwm_init()
       pwm_set_chan_level(Slice_num_rear,  PWM_CHAN_A, time2warp(1000));
       pwm_set_chan_level(Slice_num_front, PWM_CHAN_B, time2warp(1450));
       pwm_set_chan_level(Slice_num_rear,  PWM_CHAN_B, time2warp(1450));
+      set_duty_servo(P_LOCK);
+
     }
 
     // Set the PWM running
@@ -73,7 +74,8 @@ void pwm_init()
     pwm_set_chan_level(Slice_num_rear,  PWM_CHAN_A, time2warp(1000));//throttle
     pwm_set_chan_level(Slice_num_front, PWM_CHAN_B, time2warp(1450));//aileron
     pwm_set_chan_level(Slice_num_rear,  PWM_CHAN_B, time2warp(1450));//rudder
-    pwm_set_chan_level(Slice_num_servo, PWM_CHAN_A, time2warp(1450));
+    set_duty_servo(P_LOCK);
+    //pwm_set_chan_level(Slice_num_servo, PWM_CHAN_A, time2warp(1450));
 
     sleep_ms(1000);
 }
@@ -81,6 +83,13 @@ void pwm_init()
 uint16_t time2warp(uint16_t usec)
 {
     return (uint16_t)(usec*125/100 - 1);
+}
+
+uint16_t duty2wrap(float duty)
+{
+    uint16_t usec;
+    usec = (uint16_t)(duty*1000.0) + 1000;
+    return time2warp(usec);
 }
 
 void set_duty_aileron(float duty)

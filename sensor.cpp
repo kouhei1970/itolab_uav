@@ -47,6 +47,7 @@ void imu_mag_init(void)
       /* manage here device not found */
       printf("Device not found !\n");
       sleep_ms(1000);
+      //return; 
     }
   }
 

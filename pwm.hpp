@@ -11,6 +11,11 @@
 #include "main.hpp"
 #include "control.hpp"
 
+//ESC1 ESC モータ
+//ESC2 ラダー
+//ESC3 エレベーター
+//ESC4 エルロン
+
 //#define DUTYMIN 1250
 //#define DUTYMAX 2500
 #define DUTYMIN 625
