@@ -6,6 +6,7 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 #include "pico/binary_info.h"
+#include "pico/sem.h"
 #include "sensor.hpp"
 #include "ekf.hpp"
 #include "pwm.hpp"

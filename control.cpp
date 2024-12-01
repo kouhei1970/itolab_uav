@@ -32,6 +32,8 @@ float Pref = 0.0, Qref = 0.0, Rref = 0.0;
 const float Phi_trim = 0.01;
 const float Theta_trim = 0.02;
 const float Psi_trim = 0.0;
+const float Rate_control_stap_time = 0.0025;
+const float Angle_control_stap_time = 0.01;
 
 // Extended Kalman filter
 Matrix<float, 7, 1> Xp = MatrixXf::Zero(7, 1);
@@ -348,15 +350,15 @@ void loop_400Hz(void)
 
 void control_init(void)
 {
-  acc_filter.set_parameter(0.005, 0.0025);
+  acc_filter.set_parameter(0.005, Rate_control_stap_time);
   // Rate control
-  p_pid.set_parameter(2.0, 0.145, 0.028, 0.015, 0.0025); // 3.4
-  q_pid.set_parameter(2.1, 0.125, 0.028, 0.015, 0.0025); // 3.8
-  r_pid.set_parameter(12.0, 0.5, 0.008, 0.015, 0.0025);  // 9.4
+  p_pid.set_parameter(2.0, 0.145, 0.028, 0.015, Rate_control_stap_time); // 3.4
+  q_pid.set_parameter(2.1, 0.125, 0.028, 0.015, Rate_control_stap_time); // 3.8
+  r_pid.set_parameter(12.0, 0.5, 0.008, 0.015, Rate_control_stap_time);  // 9.4
   // Angle control
-  phi_pid.set_parameter(5.5, 9.5, 0.025, 0.018, 0.01);   // 6.0
-  theta_pid.set_parameter(5.5, 9.5, 0.025, 0.018, 0.01); // 6.0
-  psi_pid.set_parameter(0.0, 10.0, 0.010, 0.03, 0.01);
+  phi_pid.set_parameter(5.5, 9.5, 0.025, 0.018, Angle_control_stap_time);   // 6.0
+  theta_pid.set_parameter(5.5, 9.5, 0.025, 0.018, Angle_control_stap_time); // 6.0
+  psi_pid.set_parameter(0.0, 10.0, 0.010, 0.03, Angle_control_stap_time);
 }
 
 uint8_t lock_com(void)
@@ -539,9 +541,9 @@ void rate_control(void)
   r_err = r_ref - r_rate;
 
   // PID
-  P_com = p_pid.update(p_err);
-  Q_com = q_pid.update(q_err);
-  R_com = r_pid.update(r_err);
+  P_com = p_pid.update(p_err, Rate_control_stap_time);
+  Q_com = q_pid.update(q_err, Rate_control_stap_time);
+  R_com = r_pid.update(r_err, Rate_control_stap_time);
 
   // Motor Control
   //  1250/11.1=112.6
@@ -687,8 +689,8 @@ void angle_control(void)
     }
     else
     {
-      Pref = phi_pid.update(phi_err);
-      Qref = theta_pid.update(theta_err);
+      Pref = phi_pid.update(phi_err, Angle_control_stap_time);
+      Qref = theta_pid.update(theta_err, Angle_control_stap_time);
       Rref = Psi_ref; // psi_pid.update(psi_err);//Yawは角度制御しない
     }
 
@@ -844,7 +846,7 @@ void sensor_read(void)
 
   Acc_norm_raw = sqrt(Ax * Ax + Ay * Ay + (Az) * (Az));
   Acc_norm_x = sqrt(Ax*Ax);
-  Acc_norm = acc_filter.update(Acc_norm_raw);
+  Acc_norm = acc_filter.update(Acc_norm_raw, Rate_control_stap_time);
   Rate_norm_raw = sqrt(Wp * Wp + Wq * Wq + Wr * Wr);
 
   //動的加速度が2.5Gを超えたら射出されたとみてフラグを立てる  
@@ -1037,6 +1039,7 @@ void kalman_filter(void)
   ekf(Xp, Xe, P, Z, Omega_m, Q, R, G * dt, Beta, dt);
 }
 
+#if 0
 PID::PID()
 {
   m_kp = 1.0e-8;
@@ -1126,3 +1129,4 @@ float Filter::update(float u)
   m_out = m_state;
   return m_out;
 }
+#endif

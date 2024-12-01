@@ -23,6 +23,7 @@
  */
 
 #include "pid.hpp"
+#include <stdio.h>
 
 PID::PID() {
     m_kp           = 1.0e-8f;
@@ -55,7 +56,7 @@ void PID::i_reset(void) {
     m_integral = 0.0f;
 }
 void PID::printGain(void) {
-    Serial.printf("#Kp:%8.4f Ti:%8.4f Td:%8.4f Eta:%8.4f h:%8.4f\r\n", m_kp, m_ti, m_td, m_eta, m_h);
+    printf("#Kp:%8.4f Ti:%8.4f Td:%8.4f Eta:%8.4f h:%8.4f\r\n", m_kp, m_ti, m_td, m_eta, m_h);
 }
 
 void PID::set_error(float err) {

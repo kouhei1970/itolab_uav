@@ -9,6 +9,7 @@
 #include "hardware/irq.h"
 #include "Eigen/Dense"
 #include "ekf.hpp"
+#include "pid.hpp"
 #include <math.h>
 
 #define AILERON_CH Chdata[0]
@@ -53,6 +54,8 @@ extern float Flight_time;
 extern uint8_t Start_G_flag, Last_Start_G_flag, OverG_flag;
 extern float Acc_norm, Acc_norm_raw, Acc_norm_x,Rate_norm_raw;
 
+
+#if 0
 class PID
 {
   private:
@@ -94,5 +97,6 @@ class Filter
     void reset(void);
     float update(float u);
 };
+#endif
 
 #endif
