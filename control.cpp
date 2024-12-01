@@ -66,6 +66,7 @@ uint8_t Last_Start_G_flag = 0;
 
 // PID object and etc.
 Filter acc_filter;
+WashoutFilter washout_filter(3.0, Rate_control_stap_time);
 PID p_pid;
 PID q_pid;
 PID r_pid;
@@ -352,13 +353,13 @@ void control_init(void)
 {
   acc_filter.set_parameter(0.005, Rate_control_stap_time);
   // Rate control
-  p_pid.set_parameter(2.0, 0.145, 0.028, 0.015, Rate_control_stap_time); // 3.4
-  q_pid.set_parameter(2.1, 0.125, 0.028, 0.015, Rate_control_stap_time); // 3.8
-  r_pid.set_parameter(12.0, 0.5, 0.008, 0.015, Rate_control_stap_time);  // 9.4
+  p_pid.set_parameter(0.1f, 100000.0f, 0.0, 0.125, Rate_control_stap_time); //0.1f, 100000.0f, 0.0
+  q_pid.set_parameter(0.1f, 100000.0f, 0.0, 0.125, Rate_control_stap_time); //0.1f, 100000.0f, 0.0
+  r_pid.set_parameter(0.1f, 100000.0f, 0.0, 0.125, Rate_control_stap_time); //0.1f, 100000.0f, 0.0
   // Angle control
-  phi_pid.set_parameter(5.5, 9.5, 0.025, 0.018, Angle_control_stap_time);   // 6.0
-  theta_pid.set_parameter(5.5, 9.5, 0.025, 0.018, Angle_control_stap_time); // 6.0
-  psi_pid.set_parameter(0.0, 10.0, 0.010, 0.03, Angle_control_stap_time);
+  phi_pid.set_parameter(  1.0f, 100.0f, 0.0f, 0.125, Angle_control_stap_time); // 1.0f, 100.0f, 0.0f
+  theta_pid.set_parameter(1.0f, 100.0f, 0.0f, 0.125, Angle_control_stap_time); // 1.0f, 100.0f, 0.0f
+  //psi_pid.set_parameter(0.0f, 100000.0f, 0.0f, 0.125, Angle_control_stap_time);
 }
 
 uint8_t lock_com(void)
@@ -513,6 +514,7 @@ void direct_control(void)
 void rate_control(void)
 {
   float p_rate, q_rate, r_rate;
+  float r_wash;
   float p_ref, q_ref, r_ref;
   float p_err, q_err, r_err;
 
@@ -528,17 +530,19 @@ void rate_control(void)
   p_rate = Wp - Pbias;
   q_rate = Wq - Qbias;
   r_rate = Wr - Rbias;
+  r_wash = washout_filter.update(r_rate);
+
 
   // Get reference
   p_ref = Pref;
   q_ref = Qref;
   r_ref = Rref;
-  T_ref = 0.6 * BATTERY_VOLTAGE * (float)(Chdata[2] - CH3MIN) / (CH3MAX - CH3MIN);
+  T_ref = (float)(THROTTLE_CH - CH3MIN) / (CH_MAX - CH_MIN);
 
   // Error
   p_err = p_ref - p_rate;
   q_err = q_ref - q_rate;
-  r_err = r_ref - r_rate;
+  r_err = r_ref - r_wash;
 
   // PID
   P_com = p_pid.update(p_err, Rate_control_stap_time);
@@ -549,10 +553,10 @@ void rate_control(void)
   //  1250/11.1=112.6
   //  1/11.1=0.0901
 
-  Rudder_duty = (T_ref + (-P_com + Q_com - R_com) * 0.25) * 0.0901;
-  Elevator_duty = (T_ref + (P_com + Q_com + R_com) * 0.25) * 0.0901;
-  Aileron_duty = (T_ref + (-P_com - Q_com + R_com) * 0.25) * 0.0901;
-  Throttle_duty = (T_ref + (P_com - Q_com - R_com) * 0.25) * 0.0901;
+  Rudder_duty = R_com;
+  Elevator_duty = Q_com;
+  Aileron_duty = P_com;
+  Throttle_duty = T_ref;
   // Rudder_duty = (T_ref)*0.0901;
   // Elevator_duty = (T_ref)*0.0901;
   // Aileron_duty = (T_ref)*0.0901;
@@ -660,9 +664,10 @@ void angle_control(void)
     Psi = atan2(e12, e11);
 
     // Get angle ref
-    //Phi_ref = Phi_trim + 0.3 * M_PI * (float)(Chdata[3] - (CH4MAX + CH4MIN) * 0.5) * 2 / (CH4MAX - CH4MIN);
-    //Theta_ref = Theta_trim + 0.3 * M_PI * (float)(Chdata[1] - (CH2MAX + CH2MIN) * 0.5) * 2 / (CH2MAX - CH2MIN);
-    //Psi_ref = Psi_trim + 0.8 * M_PI * (float)(Chdata[0] - (CH1MAX + CH1MIN) * 0.5) * 2 / (CH1MAX - CH1MIN);
+    // Get Stick Command
+    Phi_ref = (float)(AILERON_CH - (CH1MAX + CH1MIN) * 0.5) * 2 / (CH1MAX - CH1MIN);
+    Theta_ref = (float)(ELEVATOR_CH - (CH2MAX + CH2MIN) * 0.5) * 2 / (CH2MAX - CH2MIN);
+    Psi_ref = (float)(RUDDER_CH - (CH4MAX + CH4MIN) * 0.5) * 2 / (CH4MAX - CH4MIN);
 
     // Error
     phi_err = Phi_ref - (Phi - Phi_bias);

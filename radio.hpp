@@ -10,7 +10,7 @@
 #define STOP_BITS 2
 #define PARITY UART_PARITY_EVEN
 
-#define T6L 
+//#define T6L 
 
 #ifndef T6L
     #define CH1MAX 1696

@@ -60,4 +60,44 @@ class Filter {
     float update(float u, float h);
 };
 
+
+class WashoutFilter {
+private:
+    float b0, b1; // 分子係数
+    float a0, a1; // 分母係数
+    float x_prev; // 入力の1サンプル前
+    float y_prev; // 出力の1サンプル前
+
+public:
+    // コンストラクタ
+    WashoutFilter(float timeConstant, float samplingTime) {
+        // 双一次変換で係数を計算
+        float T = timeConstant;
+        float Ts = samplingTime;
+        b0 = (2 * T) / (2 * T + Ts);
+        b1 = -b0;
+        a0 = 1.0;
+        a1 = -(2 * T - Ts) / (2 * T + Ts);
+
+        // 初期化
+        x_prev = 0.0;
+        y_prev = 0.0;
+    }
+
+    // フィルタリング処理
+    float update(double input) {
+        // 双一次変換の差分方程式
+        float output = (b0 * input + b1 * x_prev - a1 * y_prev) / a0;
+
+        // 過去値を更新
+        x_prev = input;
+        y_prev = output;
+
+        return output;
+    }
+};
+
+
+
+
 #endif

@@ -99,3 +99,4 @@ float Filter::update(float u, float h) {
     m_out   = m_state;
     return m_out;
 }
+
