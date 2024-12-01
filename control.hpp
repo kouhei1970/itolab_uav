@@ -27,7 +27,7 @@
 
 #define P_UNLOCK (0.01f)
 #define P_LOCK (0.95f)
-#define M_PI (3.14159265358979323846)
+//#define M_PI (3.14159265358979323846)
 
 using Eigen::MatrixXd;
 using Eigen::MatrixXf;
