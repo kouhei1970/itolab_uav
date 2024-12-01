@@ -5,7 +5,7 @@
 #include <iostream>
 #include <random>
 #include "pico/stdlib.h"
-#include <Eigen/Dense>
+#include "Eigen/Dense"
 #include <unistd.h>
 #include <math.h>
 

@@ -1,6 +1,7 @@
 // comment
 #include "main.hpp"
 #include "control.hpp"
+#include "pid.hpp"
 
 //グローバル変数
 uint8_t Arm_flag=0;

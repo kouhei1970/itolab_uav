@@ -7,7 +7,7 @@
 #include "sensor.hpp"
 #include "hardware/pwm.h"
 #include "hardware/irq.h"
-#include <Eigen/Dense>
+#include "Eigen/Dense"
 #include "ekf.hpp"
 #include <math.h>
 
