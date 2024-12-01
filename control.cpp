@@ -836,13 +836,14 @@ void sensor_read(void)
   Ax = -acceleration_mg[0] * GRAV * 0.001;
   Ay = -acceleration_mg[1] * GRAV * 0.001;
   Az = acceleration_mg[2] * GRAV * 0.001;
+
   Wp = angular_rate_mdps[0] * M_PI * 5.55555555e-6; // 5.5.....e-6=1/180/1000
   Wq = angular_rate_mdps[1] * M_PI * 5.55555555e-6;
   Wr = -angular_rate_mdps[2] * M_PI * 5.55555555e-6;
+  
   Mx0 = -magnetic_field_mgauss[0];
   My0 = magnetic_field_mgauss[1];
   Mz0 = -magnetic_field_mgauss[2];
-
 
   Acc_norm_raw = sqrt(Ax * Ax + Ay * Ay + (Az) * (Az));
   Acc_norm_x = sqrt(Ax*Ax);
