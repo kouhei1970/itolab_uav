@@ -253,9 +253,9 @@ void loop_400Hz(void)
 
     
     // Rate Control (400Hz)
-    // rate_control();
+    rate_control();
     // Direct control
-    direct_control();
+    //direct_control();
     
 
     if (AngleControlCounter == 4)
